@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>МПТ Колледж</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="top-header">
+        <div class="header-card">
+            <h1>Числитель</h1>
+            <p id="current-date">Загрузка...</p>
+        </div>
+    </header>
+
+    <main id="main-content">
+        
+        <!-- Вкладка: Обзор -->
+        <section id="overview-view" class="tab-content active">
+            <div class="day-title">
+                <h2>Сегодня</h2>
+                <span class="badge" id="today-name">Загрузка...</span>
+            </div>
+            
+            <!-- Сюда автоматически подставится расписание на сегодня -->
+            <div id="today-schedule">
+                <p style="color: var(--text-secondary); padding: 20px;">Загрузка расписания...</p>
+            </div>
+        </section>
+
+        <!-- Вкладка: Неделя (Полное расписание) -->
+        <section id="week-view" class="tab-content">
+            <div class="day-block">
+                <div class="day-title"><h2>Понедельник</h2><span class="badge">Нежинская</span></div>
+                <div class="lesson-card"><div class="lesson-num">1</div><div class="lesson-info"><h3>История</h3><p>Л.В. Бегунова</p></div><div class="lesson-time"><span>08:30</span><span class="time-end">10:00</span></div></div>
+                <div class="break-info"><span>Перемена 10 мин</span><span>10:00 - 10:10</span></div>
+                <div class="lesson-card"><div class="lesson-num">2</div><div class="lesson-info"><h3>Русский язык</h3><p>Н.Е. Петкова</p></div><div class="lesson-time"><span>10:10</span><span class="time-end">11:40</span></div></div>
+                <div class="break-info"><span>Перемена 20 мин</span><span>11:40 - 12:00</span></div>
+                <div class="lesson-card"><div class="lesson-num">3</div><div class="lesson-info"><h3>Физика</h3><p>Д.Б. Магомедов</p></div><div class="lesson-time"><span>12:00</span><span class="time-end">13:30</span></div></div>
+                <div class="break-info"><span>Перемена 20 мин</span><span>13:30 - 13:50</span></div>
+                <div class="lesson-card"><div class="lesson-num">4</div><div class="lesson-info"><h3>Информатика</h3><p>Д.С. Городецкая</p></div><div class="lesson-time"><span>13:50</span><span class="time-end">15:20</span></div></div>
+            </div>
+            <div class="day-block">
+                <div class="day-title"><h2>Вторник</h2><span class="badge">Нежинская</span></div>
+                <div class="lesson-card"><div class="lesson-num">1</div><div class="lesson-info"><h3>Математика</h3><p>В.В. Положков</p></div><div class="lesson-time"><span>08:30</span><span class="time-end">10:00</span></div></div>
+                <div class="break-info"><span>Перемена 10 мин</span><span>10:00 - 10:10</span></div>
+                <div class="lesson-card"><div class="lesson-num">2</div><div class="lesson-info"><h3>Физика</h3><p>Д.Б. Магомедов</p></div><div class="lesson-time"><span>10:10</span><span class="time-end">11:40</span></div></div>
+                <div class="break-info"><span>Перемена 20 мин</span><span>11:40 - 12:00</span></div>
+                <div class="lesson-card"><div class="lesson-num">3</div><div class="lesson-info"><h3>Физическая культура</h3><p>А.А. Пучков</p></div><div class="lesson-time"><span>12:00</span><span class="time-end">13:30</span></div></div>
+            </div>
+            <div class="day-block">
+                <div class="day-title"><h2>Среда</h2><span class="badge">Нежинская</span></div>
+                <div class="lesson-card"><div class="lesson-num">2</div><div class="lesson-info"><h3>ОБЗР</h3><p>М.А. Кульгавов</p></div><div class="lesson-time"><span>10:10</span><span class="time-end">11:40</span></div></div>
+                <div class="break-info"><span>Перемена 20 мин</span><span>11:40 - 12:00</span></div>
+                <div class="lesson-card"><div class="lesson-num">3</div><div class="lesson-info"><h3>Обработка цифровой информации</h3><p>Н.А. Кульчинская</p></div><div class="lesson-time"><span>12:00</span><span class="time-end">13:30</span></div></div>
+                <div class="break-info"><span>Перемена 20 мин</span><span>13:30 - 13:50</span></div>
+                <div class="lesson-card"><div class="lesson-num">4</div><div class="lesson-info"><h3>УП 04 01 Учебная практика</h3><p>Н.А. Кульчинская</p></div><div class="lesson-time"><span>13:50</span><span class="time-end">15:20</span></div></div>
+                <div class="break-info"><span>Перемена 10 мин</span><span>15:20 - 15:30</span></div>
+                <div class="lesson-card"><div class="lesson-num">5</div><div class="lesson-info"><h3>Информатика</h3><p>Д.С. Городецкая</p></div><div class="lesson-time"><span>15:30</span><span class="time-end">17:00</span></div></div>
+            </div>
+            <div class="day-block">
+                <div class="day-title"><h2>Четверг</h2><span class="badge" style="color: #555; background: transparent; border: 1px solid #333;">Выходной</span></div>
+            </div>
+            <div class="day-block">
+                <div class="day-title"><h2>Пятница</h2><span class="badge">Нежинская</span></div>
+                <div class="lesson-card"><div class="lesson-num">2</div><div class="lesson-info"><h3>Литература</h3><p>Н.Е. Петкова</p></div><div class="lesson-time"><span>10:10</span><span class="time-end">11:40</span></div></div>
+                <div class="break-info"><span>Перемена 20 мин</span><span>11:40 - 12:00</span></div>
+                <div class="lesson-card">
+                    <div class="lesson-num">3</div>
+                    <div class="lesson-info">
+                        <div style="margin-bottom: 8px;"><h3>Индивидуальный проект</h3><p>М.Н. Кирюхина</p></div>
+                        <div style="border-top: 1px solid #333; padding-top: 8px;"><h3>География</h3><p>В.А. Николаев</p></div>
+                    </div>
+                    <div class="lesson-time"><span>12:00</span><span class="time-end">13:30</span></div>
+                </div>
+                <div class="break-info"><span>Перемена 20 мин</span><span>13:30 - 13:50</span></div>
+                <div class="lesson-card"><div class="lesson-num">4</div><div class="lesson-info"><h3>История</h3><p>Л.В. Бегунова</p></div><div class="lesson-time"><span>13:50</span><span class="time-end">15:20</span></div></div>
+                <div class="break-info"><span>Перемена 10 мин</span><span>15:20 - 15:30</span></div>
+                <div class="lesson-card"><div class="lesson-num">5</div><div class="lesson-info"><h3>Обществознание</h3><p>С.А. Абрамов</p></div><div class="lesson-time"><span>15:30</span><span class="time-end">17:00</span></div></div>
+            </div>
+            <div class="day-block" style="margin-bottom: 80px;">
+                <div class="day-title"><h2>Суббота</h2><span class="badge">Нежинская</span></div>
+                <div class="lesson-card"><div class="lesson-num">2</div><div class="lesson-info"><h3>Математика</h3><p>В.В. Положков</p></div><div class="lesson-time"><span>10:10</span><span class="time-end">11:40</span></div></div>
+                <div class="break-info"><span>Перемена 20 мин</span><span>11:40 - 12:00</span></div>
+                <div class="lesson-card"><div class="lesson-num">3</div><div class="lesson-info"><h3>Иностранный язык</h3><p>Н.Г. Николаева, А.Л. Лосикова</p></div><div class="lesson-time"><span>12:00</span><span class="time-end">13:30</span></div></div>
+                <div class="break-info"><span>Перемена 20 мин</span><span>13:30 - 13:50</span></div>
+                <div class="lesson-card"><div class="lesson-num">4</div><div class="lesson-info"><h3>Математика</h3><p>В.В. Положков</p></div><div class="lesson-time"><span>13:50</span><span class="time-end">15:20</span></div></div>
+            </div>
+        </section>
+
+        <!-- Вкладка: Оценки и Д/З -->
+        <section id="grades-view" class="tab-content">
+            <div class="day-title"><h2>Оценки / Дз</h2></div>
+            <div class="grades-placeholder" style="margin-top: 10px;">
+                <h3>📊 Журнал оценок</h3>
+                <p>Система колледжа требует авторизации.</p>
+                <button class="primary-btn" onclick="openGrades()">Открыть журнал</button>
+            </div>
+            <div class="grades-placeholder" style="margin-top: 15px; margin-bottom: 80px;">
+                <h3>📚 Google Classroom</h3>
+                <p>Задания, дедлайны и материалы.</p>
+                <button class="primary-btn" style="background: #0f9d58; color: white;" onclick="openClassroom()">Открыть Classroom</button>
+            </div>
+        </section>
+
+        <!-- Вкладка: Звонки -->
+        <section id="bells-view" class="tab-content">
+            <div class="day-title"><h2>Звонки</h2></div>
+            <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">Расписание звонков</p>
+            <div class="timeline">
+                <div class="timeline-item"><div class="timeline-num">1</div><div class="timeline-content"><h3>08:30 - 10:00</h3><p>Перемена 10 минут</p></div></div>
+                <div class="timeline-item"><div class="timeline-num">2</div><div class="timeline-content"><h3>10:10 - 11:40</h3><p>Перемена 20 минут</p></div></div>
+                <div class="timeline-item"><div class="timeline-num">3</div><div class="timeline-content"><h3>12:00 - 13:30</h3><p>Перемена 20 минут</p></div></div>
+                <div class="timeline-item"><div class="timeline-num">4</div><div class="timeline-content"><h3>13:50 - 15:20</h3><p>Перемена 10 минут</p></div></div>
+                <div class="timeline-item"><div class="timeline-num">5</div><div class="timeline-content"><h3>15:30 - 17:00</h3><p>Перемена 5 минут</p></div></div>
+                <div class="timeline-item"><div class="timeline-num">6</div><div class="timeline-content"><h3>17:05 - 18:35</h3><p>Перемена 5 минут</p></div></div>
+                <div class="timeline-item"><div class="timeline-num">7</div><div class="timeline-content"><h3>18:40 - 20:10</h3><p>Конец учебного дня</p></div></div>
+            </div>
+        </section>
+
+        <!-- Вкладка: Настройки -->
+        <section id="settings-view" class="tab-content">
+            <div class="day-title"><h2>Настройки</h2></div>
+            <div class="settings-list">
+                <div class="settings-item" onclick="updateSchedule()">
+                    <div class="settings-item-left">
+                        <div class="settings-item-icon">🔄</div>
+                        <div><h4>Обновить расписание</h4><p id="update-text">Последнее обновление: 26.10 в 06:52</p></div>
+                    </div>
+                    <div class="settings-chevron">›</div>
+                </div>
+                <div class="settings-item" onclick="toggleTheme()">
+                    <div class="settings-item-left">
+                        <div class="settings-item-icon">🎨</div>
+                        <div><h4>Тема оформления</h4><p id="theme-text">Темная</p></div>
+                    </div>
+                    <div class="settings-chevron">›</div>
+                </div>
+                <div class="settings-item" onclick="contactDev()">
+                    <div class="settings-item-left">
+                        <div class="settings-item-icon">💬</div>
+                        <div><h4>Связаться с разработчиком</h4><p>Сообщить об ошибке</p></div>
+                    </div>
+                    <div class="settings-chevron">›</div>
+                </div>
+            </div>
+            <div class="settings-list" style="margin-top: 20px; margin-bottom: 80px;">
+                <div class="settings-item">
+                    <div class="settings-item-left">
+                        <div class="settings-item-icon">ℹ️</div>
+                        <div><h4>О приложении</h4><p>Версия 1.0.0</p></div>
+                    </div>
+                    <div class="settings-chevron">›</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('overview-view', this)"><span class="icon">⚡️</span><span>Обзор</span></button>
+        <button class="nav-item" onclick="switchTab('week-view', this)"><span class="icon">📅</span><span>Неделя</span></button>
+        
+        <!-- ВОТ ТУТ ИЗМЕНЕНО НАЗВАНИЕ КНОПКИ -->
+        <button class="nav-item" onclick="switchTab('grades-view', this)"><span class="icon">📊</span><span>Оценки/Дз</span></button>
+        
+        <button class="nav-item" onclick="switchTab('bells-view', this)"><span class="icon">🔔</span><span>Звонки</span></button>
+        <button class="nav-item" onclick="switchTab('settings-view', this)"><span class="icon">⚙️</span><span>Настройки</span></button>
+    </nav>
+
+    <script src="app.js"></script>
+</body>
+</html>
