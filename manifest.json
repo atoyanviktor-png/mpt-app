@@ -1,7 +1,7 @@
 {
   "name": "МПТ Расписание",
   "short_name": "МПТ",
-  "start_url": "/",
+  "start_url": "/mpt-app/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
