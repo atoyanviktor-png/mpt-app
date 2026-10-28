@@ -6,7 +6,7 @@ function switchTab(tabId, btnElement) {
     if (btnElement) btnElement.classList.add('active');
 }
 
-// База данных расписания
+// База данных расписания (понедельник для СА-1-26)
 const database = {
     "СА-1-26": {
         "Понедельник": [
@@ -24,7 +24,7 @@ const database = {
     }
 };
 
-// Карта специальностей и групп
+// Карта специальностей
 const specialtiesMap = {
     "09.02.06 СА": ["СА-1-26", "СА-2-26"],
     "09.02.12 ПС": ["ПС-1-26", "ПС-2-26", "ПС-3-26", "ПС-4-26"],
@@ -34,26 +34,21 @@ const specialtiesMap = {
 const dayNames = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
 let tempSelectedSpecialty = "";
 
-// Логика онбординга
-function openSpecialties() {
-    document.getElementById('specialty-modal').classList.add('active');
-}
+// Логика выбора
+function openSpecialties() { document.getElementById('specialty-modal').classList.add('active'); }
 
 function selectSpecialty(spec) {
     tempSelectedSpecialty = spec;
     document.getElementById('specialty-modal').classList.remove('active');
-    
     const groupList = document.getElementById('group-list');
     groupList.innerHTML = '';
     const groups = specialtiesMap[spec] || ["Группа не найдена"];
-    
     groups.forEach(group => {
         const div = document.createElement('div');
         div.textContent = group;
         div.onclick = () => selectGroup(group);
         groupList.appendChild(div);
     });
-    
     document.getElementById('group-modal').classList.add('active');
 }
 
@@ -65,20 +60,15 @@ function selectGroup(group) {
 
 function saveGroupAndStart() {
     const selectedGroup = localStorage.getItem('userGroup');
-    if (!selectedGroup) {
-        alert("Пожалуйста, выберите группу!");
-        return;
-    }
-    
+    if (!selectedGroup) { alert("Пожалуйста, выберите группу!"); return; }
     document.getElementById('onboarding-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
     document.getElementById('header-group-name').textContent = selectedGroup;
     document.getElementById('current-group-settings').textContent = selectedGroup;
-    
     renderApp();
 }
 
-// Основная логика приложения
+// Логика приложения
 function renderApp() {
     const group = localStorage.getItem('userGroup') || 'СА-1-26';
     const now = new Date();
@@ -88,29 +78,20 @@ function renderApp() {
     const options = { weekday: 'long', day: 'numeric', month: 'long' };
     let dateStr = now.toLocaleDateString('ru-RU', options);
     document.getElementById('current-date').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
-    
     document.getElementById('today-name').textContent = todayName;
 
-    // Рендер Обзора
     const scheduleForToday = (database[group] && database[group][todayName]) || [];
     const overviewContainer = document.getElementById('today-schedule');
-    
     if (scheduleForToday.length === 0) {
         overviewContainer.innerHTML = '<div class="grades-placeholder"><h3>Выходной 🎉</h3><p>Сегодня пар нет!</p></div>';
     } else {
         let html = '';
         scheduleForToday.forEach(l => {
-            html += `
-                <div class="lesson-card">
-                    <div class="lesson-num">${l.num}</div>
-                    <div class="lesson-info"><h3>${l.name}</h3><p>${l.teacher}</p></div>
-                    <div class="lesson-time"><span>${l.time.split(' - ')[0]}</span><span class="time-end">${l.time.split(' - ')[1]}</span></div>
-                </div>`;
+            html += `<div class="lesson-card"><div class="lesson-num">${l.num}</div><div class="lesson-info"><h3>${l.name}</h3><p>${l.teacher}</p></div><div class="lesson-time"><span>${l.time.split(' - ')[0]}</span><span class="time-end">${l.time.split(' - ')[1]}</span></div></div>`;
         });
         overviewContainer.innerHTML = html;
     }
 
-    // Рендер Недели
     const weekContainer = document.getElementById('full-week-schedule');
     let weekHtml = '';
     for (let i = 1; i <= 6; i++) {
@@ -121,25 +102,18 @@ function renderApp() {
             weekHtml += `<p style="color: var(--text-secondary); margin-bottom: 15px; padding-left: 10px;">Выходной</p>`;
         } else {
             daySchedule.forEach(l => {
-                weekHtml += `
-                    <div class="lesson-card">
-                        <div class="lesson-num">${l.num}</div>
-                        <div class="lesson-info"><h3>${l.name}</h3><p>${l.teacher}</p></div>
-                        <div class="lesson-time"><span>${l.time.split(' - ')[0]}</span><span class="time-end">${l.time.split(' - ')[1]}</span></div>
-                    </div>`;
+                weekHtml += `<div class="lesson-card"><div class="lesson-num">${l.num}</div><div class="lesson-info"><h3>${l.name}</h3><p>${l.teacher}</p></div><div class="lesson-time"><span>${l.time.split(' - ')[0]}</span><span class="time-end">${l.time.split(' - ')[1]}</span></div></div>`;
             });
         }
     }
     weekContainer.innerHTML = weekHtml;
 }
 
-// Функция смены группы
 function changeGroup() {
     document.getElementById('app-screen').style.display = 'none';
     document.getElementById('onboarding-screen').style.display = 'flex';
 }
 
-// Старт приложения
 window.onload = function() {
     const savedGroup = localStorage.getItem('userGroup');
     if (savedGroup) {
@@ -151,8 +125,6 @@ window.onload = function() {
     }
 };
 
-// Вспомогательные функции
 function openGrades() { window.open("https://mpt.rea.ru/student/progress/journal", "_blank"); }
 function openClassroom() { window.open("https://classroom.google.com", "_blank"); }
 function updateSchedule() { alert("Расписание обновлено!"); }
-function contactDev() { alert("Связь с разработчиком: @твой_телеграм"); }
