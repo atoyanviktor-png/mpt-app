@@ -19,7 +19,7 @@ fetch('all_schedule.json')
     })
     .catch(error => console.error("Ошибка:", error));
 
-// --- ПОЛНЫЙ СПИСОК СПЕЦИАЛЬНОСТЕЙ (как на скринах) ---
+// --- ПОЛНЫЙ СПИСОК СПЕЦИАЛЬНОСТЕЙ ---
 const specialtiesMap = {
     "09.02.01 Э": ["Э-1-23", "Э-1-24", "Э-1-25", "Э-1-26", "Э-2-23", "Э-2-24", "Э-2-25", "Э-2-26"],
     "09.02.06 СА": ["СА-1-23", "СА-1-24", "СА-1-25", "СА-1-26", "СА-2-23", "СА-2-24", "СА-2-25", "СА-3-23"],
@@ -95,7 +95,6 @@ function renderApp() {
     document.getElementById('current-date').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
     document.getElementById('today-name').textContent = todayName;
 
-    // Ищем группу
     const groupKey = Object.keys(database).find(key => {
         const cleanKey = key.replace('Группа ', '').trim();
         return cleanKey.includes(group) || group.includes(cleanKey);
@@ -108,7 +107,7 @@ function renderApp() {
     if (groupKey && database[groupKey][todayName] && database[groupKey][todayName].length > 0) {
         scheduleForToday = database[groupKey][todayName];
     } else {
-        for (let i = 1; <= 6; i++) { // Ищем следующий день
+        for (let i = 1; i <= 6; i++) {
             const nextIndex = (todayIndex + i) % 7;
             const nextName = dayNames[nextIndex];
             if (groupKey && database[groupKey][nextName] && database[groupKey][nextName].length > 0) {
@@ -120,7 +119,6 @@ function renderApp() {
         }
     }
 
-    // Рендер "Обзор"
     const overviewContainer = document.getElementById('today-schedule');
     if (scheduleForToday.length === 0) {
         overviewContainer.innerHTML = '<div class="grades-placeholder"><h3>Пар нет 😴</h3><p>На этой неделе расписание ещё не загрузили.</p></div>';
@@ -135,7 +133,6 @@ function renderApp() {
         overviewContainer.innerHTML = html;
     }
 
-    // Рендер Недели
     const weekContainer = document.getElementById('full-week-schedule');
     let weekHtml = '';
     for (let i = 1; i <= 6; i++) {
