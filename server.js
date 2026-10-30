@@ -4,14 +4,12 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-// Разрешаем запросы с любого сайта (чтобы наше приложение могло брать данные)
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
 
-// Функция парсинга (наш старый код)
 function parseSchedule() {
     return new Promise((resolve, reject) => {
         const url = 'https://mpt.ru/raspisanie/';
@@ -38,12 +36,14 @@ function parseSchedule() {
                     const scheduleForGroup = {};
 
                     rows.forEach(row => {
-                        if (row.includes('ПОНЕДЕЛЬНИК')) currentDay = 'Понедельник';
-                        if (row.includes('ВТОРНИК')) currentDay = 'Вторник';
-                        if (row.includes('СРЕДА')) currentDay = 'Среда';
-                        if (row.includes('ЧЕТВЕРГ')) currentDay = 'Четверг';
-                        if (row.includes('ПЯТНИЦА')) currentDay = 'Пятница';
-                        if (row.includes('СУББОТА')) currentDay = 'Суббота';
+                        // Ищем дни недели без учета регистра (ПОНЕДЕЛЬНИК, Понедельник и т.д.)
+                        const lowerRow = row.toLowerCase();
+                        if (lowerRow.includes('понедельник')) currentDay = 'Понедельник';
+                        if (lowerRow.includes('вторник')) currentDay = 'Вторник';
+                        if (lowerRow.includes('среда')) currentDay = 'Среда';
+                        if (lowerRow.includes('четверг')) currentDay = 'Четверг';
+                        if (lowerRow.includes('пятница')) currentDay = 'Пятница';
+                        if (lowerRow.includes('суббота')) currentDay = 'Суббота';
 
                         if (row.includes('<td')) {
                             const cells = row.match(/<td[^>]*>(.*?)<\/td>/gs);
@@ -81,7 +81,6 @@ function parseSchedule() {
     });
 }
 
-// Главный маршрут, который отдает расписание
 app.get('/api/schedule', async (req, res) => {
     try {
         console.log("Кто-то запросил расписание. Парсим...");
@@ -92,7 +91,6 @@ app.get('/api/schedule', async (req, res) => {
     }
 });
 
-// Запуск сервера
 app.listen(PORT, () => {
     console.log(`Сервер запущен на порту ${PORT}`);
 });
