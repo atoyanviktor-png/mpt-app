@@ -6,7 +6,7 @@ function switchTab(tabId, btnElement) {
     if (btnElement) btnElement.classList.add('active');
 }
 
-// --- БАЗА ДАННЫХ (ТЕПЕРЬ С СЕРВЕРА RENDER) ---
+// --- БАЗА ДАННЫХ (С СЕРВЕРА RENDER) ---
 let database = {}; 
 const API_URL = 'https://mpt-app-mck7.onrender.com/api/schedule';
 
@@ -139,6 +139,7 @@ function renderApp() {
         overviewContainer.innerHTML = html;
     }
 
+    // РЕНДЕР НЕДЕЛИ
     const weekContainer = document.getElementById('full-week-schedule');
     let weekHtml = '';
     for (let i = 1; i <= 6; i++) {
