@@ -19,7 +19,7 @@ fetch('all_schedule.json')
     })
     .catch(error => console.error("Ошибка:", error));
 
-// Список специальностей
+// --- ПОЛНЫЙ СПИСОК СПЕЦИАЛЬНОСТЕЙ (как на скринах) ---
 const specialtiesMap = {
     "09.02.01 Э": ["Э-1-23", "Э-1-24", "Э-1-25", "Э-1-26", "Э-2-23", "Э-2-24", "Э-2-25", "Э-2-26"],
     "09.02.06 СА": ["СА-1-23", "СА-1-24", "СА-1-25", "СА-1-26", "СА-2-23", "СА-2-24", "СА-2-25", "СА-3-23"],
@@ -83,11 +83,11 @@ function saveGroupAndStart() {
     renderApp();
 }
 
-// --- ОТОБРАЖЕНИЕ (УМНЫЙ ПОИСК) ---
+// --- ОТОБРАЖЕНИЕ ---
 function renderApp() {
     const group = localStorage.getItem('userGroup');
     const now = new Date();
-    let todayIndex = now.getDay(); // 0-6
+    let todayIndex = now.getDay();
     let todayName = dayNames[todayIndex];
     
     const options = { weekday: 'long', day: 'numeric', month: 'long' };
@@ -105,12 +105,10 @@ function renderApp() {
     let displayDayName = todayName;
     let isFallback = false;
 
-    // Если на сегодня есть пары, берем их
     if (groupKey && database[groupKey][todayName] && database[groupKey][todayName].length > 0) {
         scheduleForToday = database[groupKey][todayName];
     } else {
-        // Если на сегодня нет, ищем ближайший день с парами
-        for (let i = 1; i <= 6; i++) {
+        for (let i = 1; <= 6; i++) { // Ищем следующий день
             const nextIndex = (todayIndex + i) % 7;
             const nextName = dayNames[nextIndex];
             if (groupKey && database[groupKey][nextName] && database[groupKey][nextName].length > 0) {
@@ -128,7 +126,6 @@ function renderApp() {
         overviewContainer.innerHTML = '<div class="grades-placeholder"><h3>Пар нет 😴</h3><p>На этой неделе расписание ещё не загрузили.</p></div>';
     } else {
         let html = '';
-        // Если это не сегодняшний день, пишем, на какой день показываем
         if (isFallback) {
             html += `<div style="text-align:center; color: var(--text-secondary); margin-bottom: 15px; font-size: 14px;">Ближайший учебный день: <b>${displayDayName}</b></div>`;
         }
