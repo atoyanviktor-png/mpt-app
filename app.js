@@ -6,18 +6,23 @@ function switchTab(tabId, btnElement) {
     if (btnElement) btnElement.classList.add('active');
 }
 
-// --- БАЗА ДАННЫХ ---
+// --- БАЗА ДАННЫХ (ТЕПЕРЬ С СЕРВЕРА RENDER) ---
 let database = {}; 
+const API_URL = 'https://mpt-app-mck7.onrender.com/api/schedule';
 
-fetch('all_schedule.json')
+fetch(API_URL)
     .then(response => response.json())
     .then(data => {
         database = data;
+        console.log("Расписание загружено с сервера! Групп:", Object.keys(database).length);
         if (localStorage.getItem('userGroup')) {
             renderApp();
         }
     })
-    .catch(error => console.error("Ошибка:", error));
+    .catch(error => {
+        console.error("Ошибка загрузки с сервера:", error);
+        alert("Сервер просыпается (на бесплатном тарифе это занимает до 50 секунд). Пожалуйста, подождите и обновите страницу.");
+    });
 
 // --- ПОЛНЫЙ СПИСОК СПЕЦИАЛЬНОСТЕЙ ---
 const specialtiesMap = {
@@ -95,6 +100,7 @@ function renderApp() {
     document.getElementById('current-date').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
     document.getElementById('today-name').textContent = todayName;
 
+    // Ищем группу
     const groupKey = Object.keys(database).find(key => {
         const cleanKey = key.replace('Группа ', '').trim();
         return cleanKey.includes(group) || group.includes(cleanKey);
