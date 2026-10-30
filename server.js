@@ -36,7 +36,6 @@ function parseSchedule() {
                     const scheduleForGroup = {};
 
                     rows.forEach(row => {
-                        // Ищем дни недели без учета регистра (ПОНЕДЕЛЬНИК, Понедельник и т.д.)
                         const lowerRow = row.toLowerCase();
                         if (lowerRow.includes('понедельник')) currentDay = 'Понедельник';
                         if (lowerRow.includes('вторник')) currentDay = 'Вторник';
@@ -83,14 +82,14 @@ function parseSchedule() {
 
 app.get('/api/schedule', async (req, res) => {
     try {
-        console.log("Кто-то запросил расписание. Парсим...");
+        console.log("Parsing schedule...");
         const schedule = await parseSchedule();
         res.json(schedule);
     } catch (error) {
-        res.status(500).json({ error: "Ошибка парсинга" });
+        res.status(500).json({ error: "Parsing error" });
     }
 });
 
 app.listen(PORT, () => {
-    console.log(`Сервер запущен на порту ${PORT}`);
+    console.log(`Server started on port ${PORT}`);
 });
