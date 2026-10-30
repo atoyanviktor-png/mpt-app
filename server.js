@@ -17,63 +17,93 @@ function parseSchedule() {
             let data = '';
             res.on('data', (chunk) => { data += chunk; });
             res.on('end', () => {
-                const h3Regex = /<h3[^>]*>(.*?)<\/h3>/gs;
-                let match;
                 const allSchedule = {};
+                
+                // 1. Находим все группы
+                const groupRegex = /<h3[^>]*>(.*?)<\/h3>/gs;
+                let groupMatch;
+                const groupPositions = [];
 
-                while ((match = h3Regex.exec(data)) !== null) {
-                    let groupName = match[1].replace(/<[^>]+>/g, '').trim();
+                while ((groupMatch = groupRegex.exec(data)) !== null) {
+                    let groupName = groupMatch[1].replace(/<[^>]+>/g, '').trim();
                     if (groupName.length < 4 || !groupName.includes('-')) continue;
+                    groupPositions.push({ name: groupName, index: groupMatch.index });
+                }
 
-                    const afterHeaderIndex = match.index;
-                    const tableStart = data.indexOf('<table', afterHeaderIndex);
-                    const tableEnd = data.indexOf('</table>', tableStart);
-                    if (tableStart === -1 || tableEnd === -1) continue;
-                    
-                    const tableHtml = data.substring(tableStart, tableEnd + 8);
-                    const rows = tableHtml.split('<tr');
-                    let currentDay = '';
+                // 2. Для каждой группы ищем дни
+                groupPositions.forEach((group, i) => {
+                    const nextGroupIndex = i + 1 < groupPositions.length ? groupPositions[i + 1].index : data.length;
+                    const groupHtml = data.substring(group.index, nextGroupIndex);
                     const scheduleForGroup = {};
 
-                    rows.forEach(row => {
-                        const lowerRow = row.toLowerCase();
-                        if (lowerRow.includes('понедельник')) currentDay = 'Понедельник';
-                        if (lowerRow.includes('вторник')) currentDay = 'Вторник';
-                        if (lowerRow.includes('среда')) currentDay = 'Среда';
-                        if (lowerRow.includes('четверг')) currentDay = 'Четверг';
-                        if (lowerRow.includes('пятница')) currentDay = 'Пятница';
-                        if (lowerRow.includes('суббота')) currentDay = 'Суббота';
+                    // 3. Ищем блоки дней. Они начинаются с <h4>ПОНЕДЕЛЬНИК и т.д.
+                    const dayRegex = /<h4[^>]*>(.*?)<\/h4>/gs;
+                    let dayMatch;
+                    const dayBlocks = [];
 
-                        if (row.includes('<td')) {
-                            const cells = row.match(/<td[^>]*>(.*?)<\/td>/gs);
-                            if (cells && cells.length >= 3) {
-                                const clean = (str) => str.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-                                const lessonNum = clean(cells[0]);
-                                const subject = clean(cells[1]);
-                                const teacher = clean(cells[2]);
+                    while ((dayMatch = dayRegex.exec(groupHtml)) !== null) {
+                        let dayText = dayMatch[1].toUpperCase();
+                        let dayName = '';
+                        
+                        if (dayText.includes('ПОНЕДЕЛЬНИК')) dayName = 'Понедельник';
+                        if (dayText.includes('ВТОРНИК')) dayName = 'Вторник';
+                        if (dayText.includes('СРЕДА')) dayName = 'Среда';
+                        if (dayText.includes('ЧЕТВЕРГ')) dayName = 'Четверг';
+                        if (dayText.includes('ПЯТНИЦА')) dayName = 'Пятница';
+                        if (dayText.includes('СУББОТА')) dayName = 'Суббота';
 
-                                if (lessonNum && subject && subject.length > 2) {
-                                    if (!scheduleForGroup[currentDay]) scheduleForGroup[currentDay] = [];
-                                    const times = {
-                                        '1': '08:30 - 10:00', '2': '10:10 - 11:40', '3': '12:00 - 13:30',
-                                        '4': '13:50 - 15:20', '5': '15:30 - 17:00', '6': '17:05 - 18:35',
-                                        '7': '18:40 - 20:10'
-                                    };
-                                    scheduleForGroup[currentDay].push({
-                                        num: lessonNum,
-                                        name: subject,
-                                        teacher: teacher,
-                                        time: times[lessonNum] || '??'
-                                    });
+                        if (dayName) {
+                            dayBlocks.push({ name: dayName, index: dayMatch.index });
+                        }
+                    }
+
+                    // 4. Для каждого дня берем таблицу, которая идет после него
+                    dayBlocks.forEach((day, j) => {
+                        const nextDayIndex = j + 1 < dayBlocks.length ? dayBlocks[j + 1].index : groupHtml.length;
+                        const dayHtml = groupHtml.substring(day.index, nextDayIndex);
+
+                        const tableStart = dayHtml.indexOf('<table');
+                        if (tableStart === -1) return; // Если таблицы нет, пропускаем
+
+                        const tableEnd = dayHtml.indexOf('</table>', tableStart);
+                        if (tableEnd === -1) return;
+
+                        const tableHtml = dayHtml.substring(tableStart, tableEnd + 8);
+                        const rows = tableHtml.split('<tr');
+
+                        rows.forEach(row => {
+                            if (row.includes('<td')) {
+                                const cells = row.match(/<td[^>]*>(.*?)<\/td>/gs);
+                                if (cells && cells.length >= 3) {
+                                    const clean = (str) => str.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+                                    const lessonNum = clean(cells[0]);
+                                    const subject = clean(cells[1]);
+                                    const teacher = clean(cells[2]);
+
+                                    if (lessonNum && subject && subject.length > 2) {
+                                        if (!scheduleForGroup[day.name]) scheduleForGroup[day.name] = [];
+                                        const times = {
+                                            '1': '08:30 - 10:00', '2': '10:10 - 11:40', '3': '12:00 - 13:30',
+                                            '4': '13:50 - 15:20', '5': '15:30 - 17:00', '6': '17:05 - 18:35',
+                                            '7': '18:40 - 20:10'
+                                        };
+                                        scheduleForGroup[day.name].push({
+                                            num: lessonNum,
+                                            name: subject,
+                                            teacher: teacher,
+                                            time: times[lessonNum] || '??'
+                                        });
+                                    }
                                 }
                             }
-                        }
+                        });
                     });
 
                     if (Object.keys(scheduleForGroup).length > 0) {
-                        allSchedule[groupName] = scheduleForGroup;
+                        allSchedule[group.name] = scheduleForGroup;
                     }
-                }
+                });
+
                 resolve(allSchedule);
             });
         }).on('error', (err) => reject(err));
