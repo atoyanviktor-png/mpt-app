@@ -1,127 +1,137 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>МПТ Колледж</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#000000">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
+// Переключение вкладок
+function switchTab(tabId, btnElement) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    if (btnElement) btnElement.classList.add('active');
+}
 
-    <!-- ЭКРАН ПЕРВОГО ЗАПУСКА -->
-    <div id="onboarding-screen" class="onboarding">
-        <div class="onboarding-content">
-            <div class="onboarding-icon">🎓</div>
-            <h1>Добро пожаловать!</h1>
-            <p>Давай настроим приложение под тебя. Выбери свою специальность и группу.</p>
-            
-            <div class="select-group-btn" onclick="openSpecialties()">
-                <span id="selected-group-text">Выбрать группу</span>
-                <span>›</span>
-            </div>
-            <button class="primary-btn" onclick="saveGroupAndStart()">Начать</button>
-        </div>
-    </div>
+// --- БАЗА ДАННЫХ (ПОЛНАЯ, ИЗ ПАРСЕРА) ---
+const database = {};
 
-    <!-- ОСНОВНОЕ ПРИЛОЖЕНИЕ -->
-    <div id="app-screen" style="display: none;">
-        <header class="top-header">
-            <div class="header-card">
-                <h1 id="header-group-name">Группа</h1>
-                <p id="current-date">Загрузка...</p>
-            </div>
-        </header>
+// Список всех специальностей и групп (как на скринах)
+const specialtiesMap = {
+    "09.02.01 Э": ["Э-1-23", "Э-1-24", "Э-1-25", "Э-1-26", "Э-2-23", "Э-2-24", "Э-2-25", "Э-2-26"],
+    "09.02.06 СА": ["СА-1-23", "СА-1-24", "СА-1-25", "СА-1-26", "СА-2-23", "СА-2-24", "СА-2-25", "СА-3-23"],
+    "09.02.07 ИС, БД, ВД": ["ИС-1-23", "ИС-1-24", "ИС-1-25", "ИС-11-24", "ИС-11-25", "ИС-2-23", "ИС-2-24", "ИС-2-25", "БД-1-23", "БД-1-24", "БД-1-25", "ВД-1-23", "ВД-1-24", "ВД-1-25"],
+    "09.02.07 П,Т": ["П-1-23", "П-1-24", "П-1-25", "П-2-23", "П-2-24", "П-2-25", "Т-1-23", "Т-1-24", "Т-1-25"],
+    "09.02.08 ИВ": ["ИВ-1-25", "ИВ-1-26"],
+    "09.02.09 ВТ": ["ВТ-1-24", "ВТ-1-25", "ВТ-1-26", "ВТ-2-26"],
+    "09.02.10 ДВР": ["ДВР-1-25", "ДВР-1-26"],
+    "09.02.11 ПО": ["ПО-1-26", "ПО-2-26", "ПО-3-26", "ПО-4-26", "ПО-5-26", "ПО-6-26", "ПО-7-26"],
+    "09.02.12 ПС": ["ПС-1-26", "ПС-2-26", "ПС-3-26", "ПС-4-26"],
+    "09.02.13 ИИ": ["ИИ-1-25", "ИИ-1-26"],
+    "10.02.05 БИ": ["БИ-1-24", "БИ-1-25", "БИ-11-26", "БИ-2-24", "БИ-2-25", "БИ-3-24", "БИ-3-25", "БИ-1-26", "БИ-2-26", "БИ-3-26", "БИ-4-26"],
+    "25.02.08 БАС": ["БАС-1-24", "БАС-1-25", "БАС-1-26"],
+    "40.02.04 Ю": ["Ю-1-24", "Ю-1-25", "Ю-1-26", "Ю-11-26", "Ю-2-24", "Ю-2-25", "Ю-2-26", "Ю-3-24"]
+};
 
-        <main id="main-content">
-            <!-- Вкладка "Обзор" -->
-            <section id="overview-view" class="tab-content active">
-                <div class="day-title"><h2>Сегодня</h2><span class="badge" id="today-name">Загрузка...</span></div>
-                <div id="today-schedule"></div>
-            </section>
+const dayNames = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
+let tempSelectedSpecialty = "";
 
-            <!-- Вкладка "Неделя" (Красивое расписание) -->
-            <section id="week-view" class="tab-content">
-                <div class="day-title"><h2>Расписание</h2></div>
-                <div id="full-week-schedule"></div>
-            </section>
+// --- ЛОГИКА ВЫБОРА ---
+function openSpecialties() { 
+    const modal = document.getElementById('specialty-modal');
+    const list = document.getElementById('specialty-list');
+    list.innerHTML = ''; 
+    Object.keys(specialtiesMap).forEach(spec => {
+        const div = document.createElement('div');
+        div.textContent = spec;
+        div.onclick = () => selectSpecialty(spec);
+        list.appendChild(div);
+    });
+    modal.classList.add('active'); 
+}
 
-            <!-- Вкладка "Оценки" -->
-            <section id="grades-view" class="tab-content">
-                <div class="day-title"><h2>Оценки / Дз</h2></div>
-                <div class="grades-placeholder" style="margin-top: 10px;">
-                    <h3>📊 Журнал оценок</h3>
-                    <p>Система колледжа требует авторизации.</p>
-                    <button class="primary-btn" onclick="openGrades()">Открыть журнал</button>
-                </div>
-                <div class="grades-placeholder" style="margin-top: 15px; margin-bottom: 80px;">
-                    <h3>📚 Google Classroom</h3>
-                    <p>Задания, дедлайны и материалы.</p>
-                    <button class="primary-btn" style="background: #0f9d58; color: white;" onclick="openClassroom()">Открыть Classroom</button>
-                </div>
-            </section>
+function selectSpecialty(spec) {
+    tempSelectedSpecialty = spec;
+    document.getElementById('specialty-modal').classList.remove('active');
+    const groupList = document.getElementById('group-list');
+    groupList.innerHTML = '';
+    const groups = specialtiesMap[spec] || [];
+    groups.forEach(group => {
+        const div = document.createElement('div');
+        div.textContent = group;
+        div.onclick = () => selectGroup(group);
+        groupList.appendChild(div);
+    });
+    document.getElementById('group-modal').classList.add('active');
+}
 
-            <!-- Вкладка "Звонки" -->
-            <section id="bells-view" class="tab-content">
-                <div class="day-title"><h2>Звонки</h2></div>
-                <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">Расписание звонков</p>
-                <div class="timeline">
-                    <div class="timeline-item"><div class="timeline-num">1</div><div class="timeline-content"><h3>08:30 - 10:00</h3><p>Перемена 10 минут</p></div></div>
-                    <div class="timeline-item"><div class="timeline-num">2</div><div class="timeline-content"><h3>10:10 - 11:40</h3><p>Перемена 20 минут</p></div></div>
-                    <div class="timeline-item"><div class="timeline-num">3</div><div class="timeline-content"><h3>12:00 - 13:30</h3><p>Перемена 20 минут</p></div></div>
-                    <div class="timeline-item"><div class="timeline-num">4</div><div class="timeline-content"><h3>13:50 - 15:20</h3><p>Перемена 10 минут</p></div></div>
-                    <div class="timeline-item"><div class="timeline-num">5</div><div class="timeline-content"><h3>15:30 - 17:00</h3><p>Перемена 5 минут</p></div></div>
-                    <div class="timeline-item"><div class="timeline-num">6</div><div class="timeline-content"><h3>17:05 - 18:35</h3><p>Перемена 5 минут</p></div></div>
-                    <div class="timeline-item"><div class="timeline-num">7</div><div class="timeline-content"><h3>18:40 - 20:10</h3><p>Конец учебного дня</p></div></div>
-                </div>
-            </section>
+function selectGroup(group) {
+    document.getElementById('group-modal').classList.remove('active');
+    document.getElementById('selected-group-text').textContent = group;
+    localStorage.setItem('userGroup', group);
+}
 
-            <!-- Вкладка "Настройки" -->
-            <section id="settings-view" class="tab-content">
-                <div class="day-title"><h2>Настройки</h2></div>
-                <div class="settings-list">
-                    <div class="settings-item" onclick="changeGroup()">
-                        <div class="settings-item-left"><div class="settings-item-icon">🎓</div><div><h4>Сменить группу</h4><p id="current-group-settings">СА-1-26</p></div></div>
-                        <div class="settings-chevron">›</div>
-                    </div>
-                    <div class="settings-item" onclick="updateSchedule()">
-                        <div class="settings-item-left"><div class="settings-item-icon">🔄</div><div><h4>Обновить расписание</h4><p id="update-text">Только что</p></div></div>
-                        <div class="settings-chevron">›</div>
-                    </div>
-                </div>
-            </section>
-        </main>
+function saveGroupAndStart() {
+    const selectedGroup = localStorage.getItem('userGroup');
+    if (!selectedGroup) { alert("Выберите группу!"); return; }
+    document.getElementById('onboarding-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    document.getElementById('header-group-name').textContent = selectedGroup;
+    document.getElementById('current-group-settings').textContent = selectedGroup;
+    renderApp();
+}
 
-        <!-- НИЖНЕЕ МЕНЮ -->
-        <nav class="bottom-nav">
-            <button class="nav-item active" onclick="switchTab('overview-view', this)"><span class="icon">⚡️</span><span>Обзор</span></button>
-            <button class="nav-item" onclick="switchTab('week-view', this)"><span class="icon">📅</span><span>Неделя</span></button>
-            <button class="nav-item" onclick="switchTab('grades-view', this)"><span class="icon">📊</span><span>Оценки/Дз</span></button>
-            <button class="nav-item" onclick="switchTab('bells-view', this)"><span class="icon">🔔</span><span>Звонки</span></button>
-            <button class="nav-item" onclick="switchTab('settings-view', this)"><span class="icon">⚙️</span><span>Настройки</span></button>
-        </nav>
-    </div>
+// --- ОТОБРАЖЕНИЕ ---
+function renderApp() {
+    const group = localStorage.getItem('userGroup');
+    const now = new Date();
+    const todayIndex = now.getDay();
+    const todayName = dayNames[todayIndex];
+    
+    const options = { weekday: 'long', day: 'numeric', month: 'long' };
+    let dateStr = now.toLocaleDateString('ru-RU', options);
+    document.getElementById('current-date').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+    document.getElementById('today-name').textContent = todayName;
 
-    <!-- МОДАЛЬНЫЕ ОКНА ДЛЯ ВЫБОРА -->
-    <div id="specialty-modal" class="modal">
-        <div class="modal-content">
-            <h2>Выберите специальность</h2>
-            <div class="modal-list" id="specialty-list"></div>
-        </div>
-    </div>
+    // Обзор
+    const scheduleForToday = (database[group] && database[group][todayName]) || [];
+    const overviewContainer = document.getElementById('today-schedule');
+    if (scheduleForToday.length === 0) {
+        overviewContainer.innerHTML = '<div class="grades-placeholder"><h3>Пар нет 😴</h3><p>Сегодня выходной.</p></div>';
+    } else {
+        let html = '';
+        scheduleForToday.forEach(l => {
+            html += `<div class="lesson-card"><div class="lesson-num">${l.num}</div><div class="lesson-info"><h3>${l.name}</h3><p>${l.teacher}</p></div><div class="lesson-time"><span>${l.time.split(' - ')[0]}</span><span class="time-end">${l.time.split(' - ')[1]}</span></div></div>`;
+        });
+        overviewContainer.innerHTML = html;
+    }
 
-    <div id="group-modal" class="modal">
-        <div class="modal-content">
-            <h2>Выберите группу</h2>
-            <div class="modal-list" id="group-list"></div>
-        </div>
-    </div>
+    // Неделя (красиво)
+    const weekContainer = document.getElementById('full-week-schedule');
+    let weekHtml = '';
+    for (let i = 1; i <= 6; i++) {
+        const dayName = dayNames[i];
+        weekHtml += `<div class="day-title"><h2>${dayName}</h2><span class="badge">${group}</span></div>`;
+        const daySchedule = (database[group] && database[group][dayName]) || [];
+        if (daySchedule.length === 0) {
+            weekHtml += `<p style="color: var(--text-secondary); margin-bottom: 15px; padding-left: 10px;">Выходной</p>`;
+        } else {
+            daySchedule.forEach(l => {
+                weekHtml += `<div class="lesson-card"><div class="lesson-num">${l.num}</div><div class="lesson-info"><h3>${l.name}</h3><p>${l.teacher}</p></div><div class="lesson-time"><span>${l.time.split(' - ')[0]}</span><span class="time-end">${l.time.split(' - ')[1]}</span></div></div>`;
+            });
+        }
+    }
+    weekContainer.innerHTML = weekHtml;
+}
 
-    <script src="app.js"></script>
-</body>
-</html>
+function changeGroup() {
+    document.getElementById('app-screen').style.display = 'none';
+    document.getElementById('onboarding-screen').style.display = 'flex';
+}
+
+window.onload = function() {
+    const savedGroup = localStorage.getItem('userGroup');
+    if (savedGroup) {
+        document.getElementById('onboarding-screen').style.display = 'none';
+        document.getElementById('app-screen').style.display = 'block';
+        document.getElementById('header-group-name').textContent = savedGroup;
+        document.getElementById('current-group-settings').textContent = savedGroup;
+        renderApp();
+    }
+};
+
+function openGrades() { window.open("https://mpt.rea.ru/student/progress/journal", "_blank"); }
+function openClassroom() { window.open("https://classroom.google.com", "_blank"); }
