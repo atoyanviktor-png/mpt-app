@@ -44,8 +44,14 @@
                 <div id="today-schedule"></div>
             </section>
 
+            <!-- ВКЛАДКА "НЕДЕЛЯ" (ТЕПЕРЬ С PDF) -->
             <section id="week-view" class="tab-content">
-                <div id="full-week-schedule"></div>
+                <div class="day-title"><h2>Расписание</h2></div>
+                <div class="grades-placeholder" style="margin-top: 20px;">
+                    <h3>📄 Расписание на семестр</h3>
+                    <p>Официальное расписание с сайта колледжа. Нажми на кнопку, чтобы открыть.</p>
+                    <button class="primary-btn" onclick="openPDF()">Открыть расписание (PDF)</button>
+                </div>
             </section>
 
             <section id="grades-view" class="tab-content">
@@ -104,10 +110,7 @@
     <div id="specialty-modal" class="modal">
         <div class="modal-content">
             <h2>Выберите специальность</h2>
-            <div class="modal-list" id="specialty-list">
-                <div onclick="selectSpecialty('09.02.06 СА')">09.02.06 СА</div>
-                <div onclick="selectSpecialty('09.02.12 ПС')">09.02.12 ПС</div>
-            </div>
+            <div class="modal-list" id="specialty-list"></div>
         </div>
     </div>
 
