@@ -6,10 +6,27 @@ function switchTab(tabId, btnElement) {
     if (btnElement) btnElement.classList.add('active');
 }
 
-// --- БАЗА ДАННЫХ (ПОЛНАЯ, ИЗ ПАРСЕРА) ---
+// --- БАЗА ДАННЫХ (ЗАГРУЖАЕТСЯ С СЕРВЕРА) ---
 const database = {};
+const API_URL = 'https://mpt-app-mck7.onrender.com/api/schedule';
 
-// Список всех специальностей и групп (как на скринах)
+// Загружаем расписание с сервера при старте
+fetch(API_URL)
+    .then(response => response.json())
+    .then(data => {
+        Object.assign(database, data);
+        console.log("Расписание загружено! Групп:", Object.keys(database).length);
+        
+        // Если группа уже выбрана, обновляем экран
+        if (localStorage.getItem('userGroup')) {
+            renderApp();
+        }
+    })
+    .catch(error => {
+        console.error("Ошибка загрузки с сервера:", error);
+    });
+
+// Список всех специальностей и групп
 const specialtiesMap = {
     "09.02.01 Э": ["Э-1-23", "Э-1-24", "Э-1-25", "Э-1-26", "Э-2-23", "Э-2-24", "Э-2-25", "Э-2-26"],
     "09.02.06 СА": ["СА-1-23", "СА-1-24", "СА-1-25", "СА-1-26", "СА-2-23", "СА-2-24", "СА-2-25", "СА-3-23"],
@@ -27,7 +44,6 @@ const specialtiesMap = {
 };
 
 const dayNames = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
-let tempSelectedSpecialty = "";
 
 // --- ЛОГИКА ВЫБОРА ---
 function openSpecialties() { 
@@ -44,7 +60,6 @@ function openSpecialties() {
 }
 
 function selectSpecialty(spec) {
-    tempSelectedSpecialty = spec;
     document.getElementById('specialty-modal').classList.remove('active');
     const groupList = document.getElementById('group-list');
     groupList.innerHTML = '';
@@ -86,15 +101,33 @@ function renderApp() {
     document.getElementById('current-date').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
     document.getElementById('today-name').textContent = todayName;
 
+    // Ищем группу в базе (парсер записал её как "Группа СА-1-26")
+    const groupKey = Object.keys(database).find(key => {
+        const cleanKey = key.replace('Группа ', '').trim();
+        return cleanKey.includes(group) || group.includes(cleanKey);
+    });
+
     // Обзор
-    const scheduleForToday = (database[group] && database[group][todayName]) || [];
+    let scheduleForToday = [];
+    if (groupKey && database[groupKey][todayName] && database[groupKey][todayName].length > 0) {
+        scheduleForToday = database[groupKey][todayName];
+    }
+
     const overviewContainer = document.getElementById('today-schedule');
     if (scheduleForToday.length === 0) {
         overviewContainer.innerHTML = '<div class="grades-placeholder"><h3>Пар нет 😴</h3><p>Сегодня выходной.</p></div>';
     } else {
         let html = '';
         scheduleForToday.forEach(l => {
-            html += `<div class="lesson-card"><div class="lesson-num">${l.num}</div><div class="lesson-info"><h3>${l.name}</h3><p>${l.teacher}</p></div><div class="lesson-time"><span>${l.time.split(' - ')[0]}</span><span class="time-end">${l.time.split(' - ')[1]}</span></div></div>`;
+            let statusHtml = '';
+            if (l.status === 'CANCELLED') {
+                statusHtml = '<span style="color: #FF3B30; font-size: 12px; margin-left: 5px;">(Отменено)</span>';
+            }
+            html += `<div class="lesson-card" style="${l.status === 'CANCELLED' ? 'opacity: 0.5;' : ''}">
+                <div class="lesson-num">${l.num}</div>
+                <div class="lesson-info"><h3>${l.name} ${statusHtml}</h3><p>${l.teacher}</p></div>
+                <div class="lesson-time"><span>${l.time.split(' - ')[0]}</span><span class="time-end">${l.time.split(' - ')[1]}</span></div>
+            </div>`;
         });
         overviewContainer.innerHTML = html;
     }
@@ -105,12 +138,25 @@ function renderApp() {
     for (let i = 1; i <= 6; i++) {
         const dayName = dayNames[i];
         weekHtml += `<div class="day-title"><h2>${dayName}</h2><span class="badge">${group}</span></div>`;
-        const daySchedule = (database[group] && database[group][dayName]) || [];
+        
+        let daySchedule = [];
+        if (groupKey && database[groupKey][dayName]) {
+            daySchedule = database[groupKey][dayName];
+        }
+
         if (daySchedule.length === 0) {
             weekHtml += `<p style="color: var(--text-secondary); margin-bottom: 15px; padding-left: 10px;">Выходной</p>`;
         } else {
             daySchedule.forEach(l => {
-                weekHtml += `<div class="lesson-card"><div class="lesson-num">${l.num}</div><div class="lesson-info"><h3>${l.name}</h3><p>${l.teacher}</p></div><div class="lesson-time"><span>${l.time.split(' - ')[0]}</span><span class="time-end">${l.time.split(' - ')[1]}</span></div></div>`;
+                let statusHtml = '';
+                if (l.status === 'CANCELLED') {
+                    statusHtml = '<span style="color: #FF3B30; font-size: 12px; margin-left: 5px;">(Отменено)</span>';
+                }
+                weekHtml += `<div class="lesson-card" style="${l.status === 'CANCELLED' ? 'opacity: 0.5;' : ''}">
+                    <div class="lesson-num">${l.num}</div>
+                    <div class="lesson-info"><h3>${l.name} ${statusHtml}</h3><p>${l.teacher}</p></div>
+                    <div class="lesson-time"><span>${l.time.split(' - ')[0]}</span><span class="time-end">${l.time.split(' - ')[1]}</span></div>
+                </div>`;
             });
         }
     }
@@ -129,7 +175,11 @@ window.onload = function() {
         document.getElementById('app-screen').style.display = 'block';
         document.getElementById('header-group-name').textContent = savedGroup;
         document.getElementById('current-group-settings').textContent = savedGroup;
-        renderApp();
+        
+        // Если данные уже загрузились, рендерим. Если нет — ждем fetch
+        if (Object.keys(database).length > 0) {
+            renderApp();
+        }
     }
 };
 
