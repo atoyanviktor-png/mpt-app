@@ -10,6 +10,8 @@ app.use((req, res, next) => {
     next();
 });
 
+let previousSchedule = null; // Хранилище прошлого расписания
+
 function parseSchedule() {
     return new Promise((resolve, reject) => {
         const url = 'https://mpt.ru/raspisanie/';
@@ -19,51 +21,52 @@ function parseSchedule() {
             res.on('end', () => {
                 const allSchedule = {};
                 
-                // 1. Находим все группы
-                const groupRegex = /<h3[^>]*>(.*?)<\/h3>/gs;
-                let groupMatch;
+                // 1. Находим все заголовки групп
+                const h3Regex = /<h3[^>]*>(.*?)<\/h3>/gs;
+                let match;
                 const groupPositions = [];
 
-                while ((groupMatch = groupRegex.exec(data)) !== null) {
-                    let groupName = groupMatch[1].replace(/<[^>]+>/g, '').trim();
+                while ((match = h3Regex.exec(data)) !== null) {
+                    let groupName = match[1].replace(/<[^>]+>/g, '').trim();
                     if (groupName.length < 4 || !groupName.includes('-')) continue;
-                    groupPositions.push({ name: groupName, index: groupMatch.index });
+                    groupPositions.push({ name: groupName, index: match.index });
                 }
 
-                // 2. Для каждой группы ищем дни
+                // 2. Для каждой группы берем весь её блок
                 groupPositions.forEach((group, i) => {
                     const nextGroupIndex = i + 1 < groupPositions.length ? groupPositions[i + 1].index : data.length;
                     const groupHtml = data.substring(group.index, nextGroupIndex);
                     const scheduleForGroup = {};
 
-                    // 3. Ищем блоки дней. Они начинаются с <h4>ПОНЕДЕЛЬНИК и т.д.
-                    const dayRegex = /<h4[^>]*>(.*?)<\/h4>/gs;
-                    let dayMatch;
-                    const dayBlocks = [];
+                    // 3. Ищем все дни недели в этом блоке
+                    const dayKeywords = [
+                        { key: 'ПОНЕДЕЛЬНИК', name: 'Понедельник' },
+                        { key: 'ВТОРНИК', name: 'Вторник' },
+                        { key: 'СРЕДА', name: 'Среда' },
+                        { key: 'ЧЕТВЕРГ', name: 'Четверг' },
+                        { key: 'ПЯТНИЦА', name: 'Пятница' },
+                        { key: 'СУББОТА', name: 'Суббота' }
+                    ];
 
-                    while ((dayMatch = dayRegex.exec(groupHtml)) !== null) {
-                        let dayText = dayMatch[1].toUpperCase();
-                        let dayName = '';
-                        
-                        if (dayText.includes('ПОНЕДЕЛЬНИК')) dayName = 'Понедельник';
-                        if (dayText.includes('ВТОРНИК')) dayName = 'Вторник';
-                        if (dayText.includes('СРЕДА')) dayName = 'Среда';
-                        if (dayText.includes('ЧЕТВЕРГ')) dayName = 'Четверг';
-                        if (dayText.includes('ПЯТНИЦА')) dayName = 'Пятница';
-                        if (dayText.includes('СУББОТА')) dayName = 'Суббота';
+                    let dayPositions = [];
 
-                        if (dayName) {
-                            dayBlocks.push({ name: dayName, index: dayMatch.index });
+                    dayKeywords.forEach(dk => {
+                        const regex = new RegExp(dk.key, 'gi');
+                        let m;
+                        while ((m = regex.exec(groupHtml)) !== null) {
+                            dayPositions.push({ name: dk.name, index: m.index });
                         }
-                    }
+                    });
+
+                    dayPositions.sort((a, b) => a.index - b.index);
 
                     // 4. Для каждого дня берем таблицу, которая идет после него
-                    dayBlocks.forEach((day, j) => {
-                        const nextDayIndex = j + 1 < dayBlocks.length ? dayBlocks[j + 1].index : groupHtml.length;
+                    dayPositions.forEach((day, j) => {
+                        const nextDayIndex = j + 1 < dayPositions.length ? dayPositions[j + 1].index : groupHtml.length;
                         const dayHtml = groupHtml.substring(day.index, nextDayIndex);
 
                         const tableStart = dayHtml.indexOf('<table');
-                        if (tableStart === -1) return; // Если таблицы нет, пропускаем
+                        if (tableStart === -1) return;
 
                         const tableEnd = dayHtml.indexOf('</table>', tableStart);
                         if (tableEnd === -1) return;
@@ -104,6 +107,36 @@ function parseSchedule() {
                     }
                 });
 
+                // === ЛОГИКА СРАВНЕНИЯ ===
+                if (previousSchedule) {
+                    for (const groupName in allSchedule) {
+                        if (previousSchedule[groupName]) {
+                            for (const day in allSchedule[groupName]) {
+                                const currentLessons = allSchedule[groupName][day];
+                                const prevLessons = previousSchedule[groupName][day] || [];
+                                
+                                // Проверяем, есть ли отмененные пары (были в прошлом, нет сейчас)
+                                prevLessons.forEach(prevLesson => {
+                                    const isStillThere = currentLessons.some(curr => 
+                                        curr.num === prevLesson.num && 
+                                        curr.name === prevLesson.name
+                                    );
+                                    
+                                    if (!isStillThere) {
+                                        // Пара отменена, добавляем её в текущее расписание со статусом CANCELLED
+                                        currentLessons.push({
+                                            ...prevLesson,
+                                            status: 'CANCELLED'
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+                // ========================
+
+                previousSchedule = allSchedule; // Сохраняем текущее расписание
                 resolve(allSchedule);
             });
         }).on('error', (err) => reject(err));
