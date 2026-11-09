@@ -14,14 +14,12 @@ fetch(API_URL)
     .then(response => response.json())
     .then(data => {
         database = data;
-        console.log("Расписание загружено с сервера! Групп:", Object.keys(database).length);
         if (localStorage.getItem('userGroup')) {
             renderApp();
         }
     })
     .catch(error => {
         console.error("Ошибка загрузки с сервера:", error);
-        alert("Сервер просыпается (на бесплатном тарифе это занимает до 50 секунд). Пожалуйста, подождите и обновите страницу.");
     });
 
 // --- ПОЛНЫЙ СПИСОК СПЕЦИАЛЬНОСТЕЙ ---
@@ -88,7 +86,6 @@ function saveGroupAndStart() {
     renderApp();
 }
 
-// --- ОТОБРАЖЕНИЕ ---
 function renderApp() {
     const group = localStorage.getItem('userGroup');
     const now = new Date();
@@ -100,7 +97,6 @@ function renderApp() {
     document.getElementById('current-date').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
     document.getElementById('today-name').textContent = todayName;
 
-    // Ищем группу
     const groupKey = Object.keys(database).find(key => {
         const cleanKey = key.replace('Группа ', '').trim();
         return cleanKey.includes(group) || group.includes(cleanKey);
@@ -138,26 +134,6 @@ function renderApp() {
         });
         overviewContainer.innerHTML = html;
     }
-
-    // РЕНДЕР НЕДЕЛИ
-    const weekContainer = document.getElementById('full-week-schedule');
-    let weekHtml = '';
-    for (let i = 1; i <= 6; i++) {
-        const dayName = dayNames[i];
-        weekHtml += `<div class="day-title"><h2>${dayName}</h2><span class="badge">${group}</span></div>`;
-        let daySchedule = [];
-        if (groupKey && database[groupKey][dayName]) {
-            daySchedule = database[groupKey][dayName];
-        }
-        if (daySchedule.length === 0) {
-            weekHtml += `<p style="color: var(--text-secondary); margin-bottom: 15px; padding-left: 10px;">Выходной</p>`;
-        } else {
-            daySchedule.forEach(l => {
-                weekHtml += `<div class="lesson-card"><div class="lesson-num">${l.num}</div><div class="lesson-info"><h3>${l.name}</h3><p>${l.teacher}</p></div><div class="lesson-time"><span>${l.time.split(' - ')[0]}</span><span class="time-end">${l.time.split(' - ')[1]}</span></div></div>`;
-            });
-        }
-    }
-    weekContainer.innerHTML = weekHtml;
 }
 
 function changeGroup() {
@@ -178,3 +154,9 @@ window.onload = function() {
 
 function openGrades() { window.open("https://mpt.rea.ru/student/progress/journal", "_blank"); }
 function openClassroom() { window.open("https://classroom.google.com", "_blank"); }
+
+// ФУНКЦИЯ ДЛЯ ОТКРЫТИЯ PDF
+function openPDF() {
+    // Ссылка на страницу с расписанием (там есть PDF)
+    window.open("https://mpt.ru/raspisanie/", "_blank");
+}
